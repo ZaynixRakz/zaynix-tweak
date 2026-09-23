@@ -1,0 +1,35 @@
+name: Build Zaynix Inject IPA (Fixed Bundle)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract Project Files
+        run: |
+          unzip -o "OGIOS - SOURCE FULL.zip" || true
+          
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Inject Custom Name and Bundle ID
+        run: |
+          sed -i '' 's/com.apple.mobile.MobileStoreInAppSheet/com.apple.mobile.MobileHouseArrest/g' ThreeOneOSFive/Info.plist || true
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.apple.mobile.MobileHouseArrest;/g' ThreeOneOSFive.xcodeproj/project.pbxproj || true
+          sed -i '' 's/ThreeOneOSFive/Zaynix Inject/g' ThreeOneOSFive/Info.plist || true
+
+      - run: chmod +x build_unsigned.sh build_esign_ready_ipa.sh
+      - run: ./build_unsigned.sh
+      - run: ./build_esign_ready_ipa.sh build/Zaynix-Inject-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Zaynix-Inject-Signed-Ready
+          path: build/Zaynix-Inject-unsigned.ipa
+          
